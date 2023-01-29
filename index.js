@@ -4,6 +4,19 @@ const morgan = require("morgan");
 const cors = require('cors')
 
 const app = express();
+const apiDesription = (tokens, req, res) =>{
+  result = [
+    tokens.method(req, res),
+    tokens.url(req, res),
+    tokens.status(req, res),
+    tokens.res(req, res, 'content-length'), '-',
+    tokens['response-time'](req, res), 'ms',
+  ]
+  if (Object.keys(req.body).length){
+    result.push(JSON.stringify(req.body))
+  }
+  return result.join(' ')
+}
 
 let persons = [
   {
@@ -28,19 +41,10 @@ let persons = [
   },
 ];
 
+app.use(express.static('build'))
 app.use(express.json());
 app.use(cors());
-app.use(morgan(function (tokens, req, res) {
-  console.log(req.body)
-  return [
-    tokens.method(req, res),
-    tokens.url(req, res),
-    tokens.status(req, res),
-    tokens.res(req, res, 'content-length'), '-',
-    tokens['response-time'](req, res), 'ms',
-    JSON.stringify(req.body)
-  ].join(' ')
-}));
+app.use(morgan(apiDesription));
 
 app.get("/api/persons/", (request, response) => {
   response.json(persons);
@@ -96,6 +100,6 @@ app.get("/info/", (request, response) => {
   </div>`);
 });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT);
 console.log(`server running at port \n ${PORT}`);
